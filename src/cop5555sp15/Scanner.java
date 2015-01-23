@@ -20,15 +20,15 @@ public class Scanner {
 	
 	
 	private static enum State {
-		Initial, Comment, Newline, Ident, Numlit, Done
+		Initial, Comment, Newline, Ident, Numlit, Strlit, Done
 	}
 
 	private String[] seperator_keys= {".","..",";",",","(",")","[","]","{","}",":","?"};
 	private Kind[] seperator_values= {DOT,RANGE,SEMICOLON,COMMA,LPAREN,RPAREN,LSQUARE,RSQUARE,LCURLY,RCURLY,COLON,QUESTION };
 
-	private String[] keyword_keys= {"int" , "string" , "boolean" , "import" , "class" , "def" , "while" , "if" , "else" , "return" , "print"};
-	private Kind[] keyword_values= {KW_INT, KW_STRING, KW_BOOLEAN, KW_IMPORT, KW_CLASS, KW_DEF, KW_WHILE, KW_IF, KW_ELSE, KW_RETURN, KW_PRINT,};
-
+	private String[] keyword_keys= {"int" , "string" , "boolean" , "import" , "class" , "def" , "while" , "if" , "else" , "return" , "print", "true", "false" , "null"};
+	private Kind[] keyword_values= {KW_INT, KW_STRING, KW_BOOLEAN, KW_IMPORT, KW_CLASS, KW_DEF, KW_WHILE, KW_IF, KW_ELSE, KW_RETURN, KW_PRINT,  BL_TRUE, BL_FALSE, NL_NULL};
+	
 	
 	private String[] operator_keys= {"=","|","&","==","!=","<",">","<=",">=","+","-","*","/","%","!","<<",">>","->","@"};
 	private Kind[] operator_values= {ASSIGN,BAR,AND,EQUAL,NOTEQUAL,LT,GT,LE,GE,PLUS,MINUS,TIMES,DIV,MOD,NOT,LSHIFT,RSHIFT,ARROW,AT};
@@ -188,9 +188,15 @@ public class Scanner {
 						state = State.Ident;
 						start = begin;
 					}
+					else if(character == '"'){
+						state = State.Strlit;
+						start = begin;
+					}
 					else{
 						System.out.println(operators.containsKey(String.valueOf((char)character)));
 						System.out.println((char)character);
+						
+						t = stream.new Token(ILLEGAL_CHAR, begin, begin+1, linenumber);
 						state = State.Done;
 					}
 					break;
@@ -216,6 +222,19 @@ public class Scanner {
 					}
 					else if(character == -1){
 						t = stream.new Token(UNTERMINATED_COMMENT, start, begin, linenumber);
+//						t = stream.new Token(EOF, begin, begin, linenumber);
+						state = State.Done;
+					}
+					break;
+				case Strlit:
+					if(character == '"'){		
+							state = State.Done;
+							t = stream.new Token(STRING_LIT, start, begin+1, linenumber);
+							// begin++;
+
+					}
+					else if(character == -1){
+						t = stream.new Token(UNTERMINATED_STRING, start, begin, linenumber);
 //						t = stream.new Token(EOF, begin, begin, linenumber);
 						state = State.Done;
 					}
