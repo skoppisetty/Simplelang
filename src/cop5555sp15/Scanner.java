@@ -16,6 +16,8 @@ public class Scanner {
 	private int linenumber;
 	private HashMap operators = new HashMap<String, Kind>();
 	private HashMap seperators = new HashMap<String, Kind>();
+	private HashMap keywords = new HashMap<String, Kind>();
+	
 	
 	private static enum State {
 		Initial, Comment, Newline, Ident, Numlit, Done
@@ -23,6 +25,9 @@ public class Scanner {
 
 	private String[] seperator_keys= {".","..",";",",","(",")","[","]","{","}",":","?"};
 	private Kind[] seperator_values= {DOT,RANGE,SEMICOLON,COMMA,LPAREN,RPAREN,LSQUARE,RSQUARE,LCURLY,RCURLY,COLON,QUESTION };
+
+	private String[] keyword_keys= {"int" , "string" , "boolean" , "import" , "class" , "def" , "while" , "if" , "else" , "return" , "print"};
+	private Kind[] keyword_values= {KW_INT, KW_STRING, KW_BOOLEAN, KW_IMPORT, KW_CLASS, KW_DEF, KW_WHILE, KW_IF, KW_ELSE, KW_RETURN, KW_PRINT,};
 
 	
 	private String[] operator_keys= {"=","|","&","==","!=","<",">","<=",">=","+","-","*","/","%","!","<<",">>","->","@"};
@@ -46,6 +51,9 @@ public class Scanner {
 		}
 		for(int i=0;i<seperator_keys.length;i++){
 			seperators.put(seperator_keys[i], seperator_values[i]);
+		}
+		for(int i=0;i<keyword_keys.length;i++){
+			keywords.put(keyword_keys[i], keyword_values[i]);
 		}
 
 	}
@@ -221,7 +229,19 @@ public class Scanner {
 					break;
 				case Ident:
 					if(!Character.isJavaIdentifierPart(character)){
-						t = stream.new Token(IDENT, start, begin, linenumber);
+						String str = "";
+
+						for(int i = start; i < begin; i++){
+						    str += stream.inputChars[i];
+						}
+						//System.out.println(str);
+						if(keywords.containsKey(str)){
+							t = stream.new Token((Kind)keywords.get(str), start, begin, linenumber);
+						}
+						else{
+							t = stream.new Token(IDENT, start, begin, linenumber);
+						}
+						
 						state = State.Done;
 						begin--;
 					}
