@@ -15,10 +15,15 @@ public class Scanner {
 	private int start;
 	private int linenumber;
 	private HashMap operators = new HashMap<String, Kind>();
+	private HashMap seperators = new HashMap<String, Kind>();
 	
 	private static enum State {
-		Initial, Comment, Newline, Done
+		Initial, Comment, Newline, Ident, Numlit, Done
 	}
+
+	private String[] seperator_keys= {".","..",";",",","(",")","[","]","{","}",":","?"};
+	private Kind[] seperator_values= {DOT,RANGE,SEMICOLON,COMMA,LPAREN,RPAREN,LSQUARE,RSQUARE,LCURLY,RCURLY,COLON,QUESTION };
+
 	
 	private String[] operator_keys= {"=","|","&","==","!=","<",">","<=",">=","+","-","*","/","%","!","<<",">>","->","@"};
 	private Kind[] operator_values= {ASSIGN,BAR,AND,EQUAL,NOTEQUAL,LT,GT,LE,GE,PLUS,MINUS,TIMES,DIV,MOD,NOT,LSHIFT,RSHIFT,ARROW,AT};
@@ -29,7 +34,7 @@ public class Scanner {
 		this.stream = stream;
 		this.begin = 0;
 		this.start = 0;
-		this.linenumber = 0;
+		this.linenumber = 1;
 		this.state = State.Initial;
 		setoperators();
 	}
@@ -38,6 +43,9 @@ public class Scanner {
 	private void setoperators() {
 		for(int i=0;i<operator_keys.length;i++){
 			operators.put(operator_keys[i], operator_values[i]);
+		}
+		for(int i=0;i<seperator_keys.length;i++){
+			seperators.put(seperator_keys[i], seperator_values[i]);
 		}
 
 	}
@@ -70,7 +78,7 @@ public class Scanner {
 					}
 					else if(Character.isWhitespace((char)getNextChar(begin))){
 						if(character == 10){
-							state = State.Done;
+							state = State.Initial;
 							linenumber++;
 						}
 						else if(character == 13){
@@ -80,87 +88,107 @@ public class Scanner {
 							state = State.Initial;
 						}
 					}
+					else if(character == '.'){
+						if((char)getNextChar(begin+1) == '.'){
+							t = stream.new Token(RANGE, begin, begin+2, linenumber);
+							begin++;
+						}
+						else{
+							t = stream.new Token(DOT, begin, begin+1, linenumber);
+						}
+						state = State.Done;
+					}
 					else if(character == '/'){
 						if((char)getNextChar(begin+1) == '*'){
 							state = State.Comment;
+							start= begin;
 							begin++;
 							
 						}
 					}
 					else if(character == '-'){
 						if((char)getNextChar(begin+1) == '>'){
-							t = stream.new Token(ARROW, begin, begin+1, linenumber);
+							t = stream.new Token(ARROW, begin, begin+2, linenumber);
 							begin++;
 						}
 						else{
-							t = stream.new Token(MINUS, begin, begin, linenumber);
+							t = stream.new Token(MINUS, begin, begin+1, linenumber);
 						}
 						state = State.Done;
 					}
 					else if(character == '<'){
 						if((char)getNextChar(begin+1) == '<'){
-							t = stream.new Token(LSHIFT, begin, begin+1, linenumber);
+							t = stream.new Token(LSHIFT, begin, begin+2, linenumber);
 							begin++;
 						}
 						else if((char)getNextChar(begin+1) == '='){
-							t = stream.new Token(LE, begin, begin+1, linenumber);
+							t = stream.new Token(LE, begin, begin+2, linenumber);
 							begin++;
 						}
 						else{
-							t = stream.new Token(LT, begin, begin, linenumber);
+							t = stream.new Token(LT, begin, begin+1, linenumber);
 						}
 						state = State.Done;
 					}
 					else if(character == '>'){
 						if((char)getNextChar(begin+1) == '>'){
-							t = stream.new Token(RSHIFT, begin, begin+1, linenumber);
+							t = stream.new Token(RSHIFT, begin, begin+2, linenumber);
 							begin++;
 						}
 						else if((char)getNextChar(begin+1) == '='){
-							t = stream.new Token(GE, begin, begin+1, linenumber);
+							t = stream.new Token(GE, begin, begin+2, linenumber);
 							begin++;
 						}
 						else{
-							t = stream.new Token(GT, begin, begin, linenumber);
+							t = stream.new Token(GT, begin, begin+1, linenumber);
 						}
 						state = State.Done;
 					}
 					else if(character == '='){
 						if((char)getNextChar(begin+1) == '='){
-							t = stream.new Token(EQUAL, begin, begin+1, linenumber);
+							t = stream.new Token(EQUAL, begin, begin+2, linenumber);
 							begin++;
 						}
 						else{
-							t = stream.new Token(ASSIGN, begin, begin, linenumber);
+							t = stream.new Token(ASSIGN, begin, begin+1, linenumber);
 						}
 						state = State.Done;
 					}
 					else if(character == '!'){
 						if((char)getNextChar(begin+1) == '='){
-							t = stream.new Token(NOTEQUAL, begin, begin+1, linenumber);
+							t = stream.new Token(NOTEQUAL, begin, begin+2, linenumber);
 							begin++;
 						}
 						else{
-							t = stream.new Token(NOT, begin, begin, linenumber);
+							t = stream.new Token(NOT, begin, begin+1, linenumber);
 						}
 						state = State.Done;
 					}
-					else if(operators.containsKey(String.valueOf(character))){
-						t = stream.new Token((Kind)operators.get((char)character), begin, begin+1, linenumber);
+					else if(operators.containsKey(String.valueOf((char)character))){
+						t = stream.new Token((Kind)operators.get(String.valueOf((char)character)), begin, begin+1, linenumber);
 						state = State.Done;
 					}
-//					else if(){
-//						
-//					}
+					else if(seperators.containsKey(String.valueOf((char)character))){
+						t = stream.new Token((Kind)seperators.get(String.valueOf((char)character)), begin, begin+1, linenumber);
+						state = State.Done;
+					}
+					else if(Character.isDigit(character)){
+						state = State.Numlit;
+						start = begin;
+					}
+					else if(Character.isJavaIdentifierStart(character)){
+						state = State.Ident;
+						start = begin;
+					}
 					else{
-						System.out.println(operators.containsKey((char)character));
+						System.out.println(operators.containsKey(String.valueOf((char)character)));
 						System.out.println((char)character);
 						state = State.Done;
 					}
 					break;
 				case Newline:
 					if(character == 10){
-						state = State.Done;
+						state = State.Initial;
 						linenumber++;
 					}
 					else{
@@ -177,6 +205,25 @@ public class Scanner {
 							begin++;
 							
 						}
+					}
+					else if(character == -1){
+						t = stream.new Token(UNTERMINATED_COMMENT, start, begin, linenumber);
+//						t = stream.new Token(EOF, begin, begin, linenumber);
+						state = State.Done;
+					}
+					break;
+				case Numlit:
+					if(!Character.isDigit(character)){
+						t = stream.new Token(INT_LIT, start, begin, linenumber);
+						state = State.Done;
+						begin--;
+					}
+					break;
+				case Ident:
+					if(!Character.isJavaIdentifierPart(character)){
+						t = stream.new Token(IDENT, start, begin, linenumber);
+						state = State.Done;
+						begin--;
 					}
 					break;
 				case Done:
