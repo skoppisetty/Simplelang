@@ -14,12 +14,15 @@ public class Scanner {
 	private int begin;
 	private int start;
 	private int linenumber;
-	private HashMap operators = new HashMap();
+	private HashMap operators = new HashMap<String, Kind>();
 	
 	private static enum State {
 		Initial, Comment, Newline, Done
 	}
 	
+	private String[] operator_keys= {"=","|","&","==","!=","<",">","<=",">=","+","-","*","/","%","!","<<",">>","->","@"};
+	private Kind[] operator_values= {ASSIGN,BAR,AND,EQUAL,NOTEQUAL,LT,GT,LE,GE,PLUS,MINUS,TIMES,DIV,MOD,NOT,LSHIFT,RSHIFT,ARROW,AT};
+
 	private State state;
 	
 	public Scanner(TokenStream stream) {
@@ -32,27 +35,11 @@ public class Scanner {
 	}
 
 
-
 	private void setoperators() {
-		operators.put('=', ASSIGN);
-		operators.put('|', BAR);
-		operators.put('&', AND);
-		operators.put("==", EQUAL);
-		operators.put("!=", NOTEQUAL);
-		operators.put('<', LT);
-		operators.put('>', GT);
-		operators.put("<=", LE);
-		operators.put(">=", GE);
-		operators.put('+', PLUS);
-		operators.put('-', MINUS);
-		operators.put('*', TIMES);
-		operators.put('/', DIV);
-		operators.put('%', MOD);
-		operators.put('!', NOT);
-		operators.put("<<", LSHIFT);
-		operators.put(">>", RSHIFT);
-		operators.put("->", ARROW);
-		operators.put('@', AT);
+		for(int i=0;i<operator_keys.length;i++){
+			operators.put(operator_keys[i], operator_values[i]);
+		}
+
 	}
 
 
@@ -158,13 +145,16 @@ public class Scanner {
 						}
 						state = State.Done;
 					}
-					else if(operators.containsKey((char)character)){
+					else if(operators.containsKey(String.valueOf(character))){
 						t = stream.new Token((Kind)operators.get((char)character), begin, begin+1, linenumber);
 						state = State.Done;
 					}
+//					else if(){
+//						
+//					}
 					else{
-						
-						System.out.print((char)character);
+						System.out.println(operators.containsKey((char)character));
+						System.out.println((char)character);
 						state = State.Done;
 					}
 					break;
