@@ -14,6 +14,7 @@ public class Scanner {
 	private int begin;
 	private int start;
 	private int linenumber;
+	private int start_line;
 	private HashMap operators = new HashMap<String, Kind>();
 	private HashMap seperators = new HashMap<String, Kind>();
 	private HashMap keywords = new HashMap<String, Kind>();
@@ -41,11 +42,11 @@ public class Scanner {
 		this.start = 0;
 		this.linenumber = 1;
 		this.state = State.Initial;
-		setoperators();
+		sethashes();
 	}
 
 
-	private void setoperators() {
+	private void sethashes() {
 		for(int i=0;i<operator_keys.length;i++){
 			operators.put(operator_keys[i], operator_values[i]);
 		}
@@ -110,6 +111,7 @@ public class Scanner {
 						if((char)getNextChar(begin+1) == '*'){
 							state = State.Comment;
 							start= begin;
+							start_line = linenumber;
 							begin++;
 							
 						}
@@ -181,6 +183,12 @@ public class Scanner {
 						state = State.Done;
 					}
 					else if(Character.isDigit(character)){
+						if(character == '0'){
+							t = stream.new Token(INT_LIT, begin, begin+1, linenumber);
+							state = State.Done;
+							break;
+						}
+						
 						state = State.Numlit;
 						start = begin;
 					}
@@ -190,6 +198,7 @@ public class Scanner {
 					}
 					else if(character == '"'){
 						state = State.Strlit;
+						start_line = linenumber;
 						start = begin;
 					}
 					else{
@@ -220,22 +229,54 @@ public class Scanner {
 							
 						}
 					}
+					else if(character == 10){
+						linenumber++;
+					}
+					else if(character == 13){
+						if(getNextChar(begin+1)  == 10){
+							linenumber++;
+							begin++;
+						}
+						else{
+							linenumber++;
+						}
+					}
 					else if(character == -1){
-						t = stream.new Token(UNTERMINATED_COMMENT, start, begin, linenumber);
+						t = stream.new Token(UNTERMINATED_COMMENT, start, begin, start_line);
 //						t = stream.new Token(EOF, begin, begin, linenumber);
+						begin--;
 						state = State.Done;
 					}
 					break;
 				case Strlit:
-					if(character == '"'){		
+					if(character == 10){
+						linenumber++;
+					}
+					else if(character == 13){
+						if(getNextChar(begin+1)  == 10){
+							linenumber++;
+							begin++;
+						}
+						else{
+							linenumber++;
+						}
+					}
+					else if(character == '\\'){
+						if(getNextChar(begin+1)  == '"'){
+							begin++;
+						}
+						//		System.out.println("sasasa");
+					}
+					else if(character == '"'){		
 							state = State.Done;
-							t = stream.new Token(STRING_LIT, start, begin+1, linenumber);
+							t = stream.new Token(STRING_LIT, start, begin+1, start_line);
 							// begin++;
 
 					}
 					else if(character == -1){
-						t = stream.new Token(UNTERMINATED_STRING, start, begin, linenumber);
+						t = stream.new Token(UNTERMINATED_STRING, start, begin, start_line);
 //						t = stream.new Token(EOF, begin, begin, linenumber);
+						begin--;
 						state = State.Done;
 					}
 					break;
@@ -279,21 +320,6 @@ public class Scanner {
 		
 	}
 
-
-//	private void skip_whitespaces() {
-//		int character = getNextChar(begin);
-//		if (character != -1){
-//			while(Character.isWhitespace((char)getNextChar(begin))){
-//				System.out.println(getNextChar(begin));
-//				begin++;
-//			}
-//			return;
-//		}
-//		else{
-//			return;
-//		}
-//		
-//	}
 	
 	public int getNextChar(int index) {
 		if (index >= stream.inputChars.length) {

@@ -1,0 +1,6 @@
+/*
+ sample " "
+*/
+
+k = "sample
+test";

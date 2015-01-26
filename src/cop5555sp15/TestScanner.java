@@ -2,6 +2,9 @@ package cop5555sp15;
 
 import static org.junit.Assert.*;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.Reader;
 import java.util.ArrayList;
 
 import org.junit.Test;
@@ -392,12 +395,182 @@ public class TestScanner {
 		scanner.scan();
 		System.out.println(stream);
 	}
+	
+	@Test
+	public void line_num(){
+		System.out.println("checking linenumber, beg and end values");
+		String input = "abc def";
+		System.out.println(input);
+		TokenStream stream = new TokenStream(input);
+		Scanner scanner = new Scanner(stream);
+		scanner.scan();
+		System.out.println(stream);
+		Token t0 = stream.new Token(IDENT, 0, 3, 1);
+		Token t1 = stream.new Token(KW_DEF, 4, 7, 1);
+		Token t2 = stream.new Token(EOF, 7, 7, 1);
+		ArrayList<Token> expected_tokens = new ArrayList<Token>();
+		expected_tokens.add(t0);
+		expected_tokens.add(t1);
+		expected_tokens.add(t2);
+		assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
+	@Test
+	public void zero_start(){
+		System.out.println("numbers starting with zero");
+		String input = "0123a4";
+		System.out.println(input);
+		TokenStream stream = new TokenStream(input);
+		Scanner scanner = new Scanner(stream);
+		scanner.scan();
+		System.out.println(stream);
+		Token t0 = stream.new Token(INT_LIT, 0, 1, 1);
+		Token t1 = stream.new Token(INT_LIT, 1, 4, 1);
+		Token t2 = stream.new Token(IDENT, 4, 6, 1);
+		Token t3 = stream.new Token(EOF, 6, 6, 1);
+		ArrayList<Token> expected_tokens = new ArrayList<Token>();
+		expected_tokens.add(t0);
+		expected_tokens.add(t1);
+		expected_tokens.add(t2);
+		expected_tokens.add(t3);
+		assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
+	
+	@Test
+	public void range_dot(){
+		System.out.println("Checking for Range and Dot");
+		String input = "...";
+		System.out.println(input);
+		TokenStream stream = new TokenStream(input);
+		Scanner scanner = new Scanner(stream);
+		scanner.scan();
+		System.out.println(stream);
+		Token t0 = stream.new Token(RANGE, 0, 2, 1);
+		Token t1 = stream.new Token(DOT, 2, 3, 1);
+		Token t2 = stream.new Token(EOF, 3, 3, 1);
+		ArrayList<Token> expected_tokens = new ArrayList<Token>();
+		expected_tokens.add(t0);
+		expected_tokens.add(t1);
+		expected_tokens.add(t2);
+		assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
+	
+	@Test
+	public void EOF_check_strlit(){
+		System.out.println("Checking for EOF after unterminated str lit");
+		String input = "\"test";
+		System.out.println(input);
+		TokenStream stream = new TokenStream(input);
+		Scanner scanner = new Scanner(stream);
+		scanner.scan();
+		System.out.println(stream);
+		Token t0 = stream.new Token(UNTERMINATED_STRING, 0, 5, 1);
+		Token t1 = stream.new Token(EOF, input.length(), input.length(), 1);
+		ArrayList<Token> expected_tokens = new ArrayList<Token>();
+		expected_tokens.add(t0);
+		expected_tokens.add(t1);
+		assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
+	@Test
+	public void EOF_check_comment(){
+		System.out.println("Checking for EOF after unterminated comment");
+		String input = "/*test";
+		System.out.println(input);
+		TokenStream stream = new TokenStream(input);
+		Scanner scanner = new Scanner(stream);
+		scanner.scan();
+		System.out.println(stream);
+		Token t0 = stream.new Token(UNTERMINATED_COMMENT, 0, 6, 1);
+		Token t1 = stream.new Token(EOF, input.length(), input.length(), 1);
+		ArrayList<Token> expected_tokens = new ArrayList<Token>();
+		expected_tokens.add(t0);
+		expected_tokens.add(t1);
+		assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
+	@Test
+	public void comment_with_quote(){
+		System.out.println("Checking for comment with quote and newline ");
+		String input = "/*test \n\r \n\r \r\n \" */\"";
+		System.out.println(input);
+		
+		TokenStream stream = new TokenStream(input);
+		Scanner scanner = new Scanner(stream);
+		scanner.scan();
+		System.out.println(stream);
+		Token t0 = stream.new Token(UNTERMINATED_STRING, 20, 21, 6);
+		Token t1 = stream.new Token(EOF, input.length(), input.length(), 6);
+		ArrayList<Token> expected_tokens = new ArrayList<Token>();
+		expected_tokens.add(t0);
+		expected_tokens.add(t1);
+		assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
+	
+	@Test
+	public void ident_start(){
+		System.out.println("Checking for identifier start for $ and _");
+		String input = "$san_test _s34\n \r 4a4#/*\"";
+		System.out.println(input);
+		TokenStream stream = new TokenStream(input);
+		Scanner scanner = new Scanner(stream);
+		scanner.scan();
+		System.out.println(stream);
+		Token t0 = stream.new Token(IDENT, 0, 9, 1);
+		Token t1 = stream.new Token(IDENT, 10, 14, 1);
+		Token t2 = stream.new Token(INT_LIT, 18, 19, 3);
+		Token t3 = stream.new Token(IDENT, 19, 21, 3);
+		Token t4 = stream.new Token(ILLEGAL_CHAR, 21, 22, 3);
+		Token t5 = stream.new Token(UNTERMINATED_COMMENT, 22, 25, 3);
+		Token t6 = stream.new Token(EOF, input.length(), input.length(), 3);
+//		System.out.println(input.length());
+		ArrayList<Token> expected_tokens = new ArrayList<Token>();
+		expected_tokens.add(t0);
+		expected_tokens.add(t1);
+		expected_tokens.add(t2);
+		expected_tokens.add(t3);
+		expected_tokens.add(t4);
+		expected_tokens.add(t5);
+		expected_tokens.add(t6);
+		
+		assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
 
+	@Test
+	public void multilinefile() throws FileNotFoundException{
+		  System.out.println("Checking for comment with quote and newline ");
+			Reader reader = new FileReader("/home/suresh/workspace/compiler/test/multiline_string.txt");
+			TokenStream stream = new TokenStream(reader);
+			Scanner scanner = new Scanner(stream);
+			scanner.scan();
+			System.out.println(stream);
+			Token t0 = stream.new Token(IDENT, 19, 20, 5);
+			Token t1 = stream.new Token(ASSIGN, 21, 22, 5);
+			Token t2 = stream.new Token(STRING_LIT, 23, 36, 5);
+			Token t3 = stream.new Token(SEMICOLON, 36, 37, 6);
+			Token t4 = stream.new Token(EOF, stream.inputChars.length, stream.inputChars.length, 6);
+			ArrayList<Token> expected_tokens = new ArrayList<Token>();
+			expected_tokens.add(t0);
+			expected_tokens.add(t1);
+			expected_tokens.add(t2);
+			expected_tokens.add(t3);
+			expected_tokens.add(t4);
+			assertArrayEquals(expected_tokens.toArray(), stream.tokens.toArray());
+	}
+	
+	
+	
+	
 	// Creates an array containing the kinds of the tokens in the token list
 	Kind[] makeKindArray(TokenStream stream) {
 		Kind[] kinds = new Kind[stream.tokens.size()];
 		for (int i = 0; i < stream.tokens.size(); ++i) {
 			kinds[i] = stream.tokens.get(i).kind;
+			System.out.println(kinds[i]);
 		}
 		return kinds;
 		
@@ -408,6 +581,7 @@ public class TestScanner {
 		String[] kinds = new String[stream.tokens.size()];
 		for (int i = 0; i < stream.tokens.size(); ++i) {
 			kinds[i] = stream.tokens.get(i).getText();
+			System.out.println(kinds[i]);
 		}
 		return kinds;
 	}
