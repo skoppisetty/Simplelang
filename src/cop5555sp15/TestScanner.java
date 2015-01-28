@@ -396,6 +396,7 @@ public class TestScanner {
 		System.out.println(stream);
 	}
 	
+	// my own test cases start
 	@Test
 	public void line_num(){
 		System.out.println("checking linenumber, beg and end values");
@@ -459,7 +460,7 @@ public class TestScanner {
 	
 	@Test
 	public void EOF_check_strlit(){
-		System.out.println("Checking for EOF after unterminated str lit");
+		System.out.println("Checking for EOF after unterminated string_lit");
 		String input = "\"test";
 		System.out.println(input);
 		TokenStream stream = new TokenStream(input);
@@ -542,9 +543,9 @@ public class TestScanner {
 
 	@Test
 	public void multilinefile() throws FileNotFoundException{
-		  System.out.println("Checking for comment with quote and newline ");
-			Reader reader = new FileReader("/home/suresh/workspace/compiler/test/multiline_string.txt");
-			TokenStream stream = new TokenStream(reader);
+		  System.out.println("Checking for comment with quote and newline ");		
+			String input = "/*\n sample \" \"\n*/\n\nk = \"sample\ntest\";";
+			TokenStream stream = new TokenStream(input);
 			Scanner scanner = new Scanner(stream);
 			scanner.scan();
 			System.out.println(stream);

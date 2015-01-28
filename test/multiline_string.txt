@@ -1,6 +1,0 @@
-/*
- sample " "
-*/
-
-k = "sample
-test";

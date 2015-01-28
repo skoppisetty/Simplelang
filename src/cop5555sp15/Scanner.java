@@ -41,6 +41,7 @@ public class Scanner {
 		this.begin = 0;
 		this.start = 0;
 		this.linenumber = 1;
+		this.start_line = 1;
 		this.state = State.Initial;
 		sethashes();
 	}
@@ -66,7 +67,6 @@ public class Scanner {
 		Token t;
 		do {
 			t = readtoken();
-			System.out.print(t);
 			if(t != null){
 				stream.tokens.add(t);
 			}
@@ -202,8 +202,8 @@ public class Scanner {
 						start = begin;
 					}
 					else{
-						System.out.println(operators.containsKey(String.valueOf((char)character)));
-						System.out.println((char)character);
+//						System.out.println(operators.containsKey(String.valueOf((char)character)));
+//						System.out.println((char)character);
 						
 						t = stream.new Token(ILLEGAL_CHAR, begin, begin+1, linenumber);
 						state = State.Done;
