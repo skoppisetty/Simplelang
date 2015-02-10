@@ -1,0 +1,79 @@
+<Program> ::= <ImportList> class IDEN T <Block>
+
+<ImportList> ∷=( import IDENT ( . IDENT )* ;) *
+
+<Block> ∷= { (<Declaration> ; | <Statement> ; )* }
+
+<Declaration> :≔ def IDENT ( <VarDec> | <ClosureDec> )
+
+<VarDec> ∷=  (: <Type> | ε )
+
+<Type> ::= <SimpleType> | @ (<KeyValueType> | <ListType>)
+
+<SimpleType> ::= int | boolean | string
+
+<KeyValueType> ::= @ [ <SimpleType> : <Type>]
+
+<ListType> ∷=  [ <Type> ]
+
+<ClosureDec> ∷=  = <Closure>
+
+<Closure> ∷ = { <FormalArgList> - > (<Statement> ;)*}
+
+<FormalArgList> ∷= ε | IDENT <VarDec> (, IDENT <VarDec>)*
+
+<Statement> ::= <LValue> = <Expression>
+
+				| print <Expression>
+
+				| while (<Expression>) <Block>
+
+				| while* ( <Expression> ) <Block>
+
+				| while* ( <Expression> .. <Expression> ) < Block>
+
+				| if (<Expression> ) <Block>
+
+				| if (<Expression>) <Block> else <Block>
+
+				| %<Expression>
+
+				| return <Expression>
+
+				| ε
+
+<ClosureEvalExpression> ∷= (<ExpressionList>)
+
+<LValue> ::= IDENT ( ε | [ <Expression> ] ) 
+
+<List> ∷=@ [ <ExpressionList> |<ExpressionList> ∷= ε | <Expression> ( , <Expression> )*
+
+<KeyValueExpression> ::= <Expression> : <Expression>
+
+<KeyValueList> ∷= ε | <KeyValueExpression> ( , <KeyValueExpression> ) *
+
+<MapList> ∷= @@[ <KeyValueList> ]
+
+<Expression> ::= <Term> (<RelOp> <Term>)*
+
+<Term> ::= <Elem> (<WeakOp> <Elem>)*
+
+<Elem> ::= <Thing> ( <StrongOp> <Thing>)*
+
+<Thing> ∷= <Factor> ( <VeryStrongOp> <Factor )*
+
+<Factor>::= IDENT | IDENT [ <Expression> ] | INT_LIT | true | false | STRING_LIT
+
+| ( <Expression> ) | ! <Factor> | -<Factor> | size(<Expression> ) |
+
+key(<Expression ) | value(<Expression >) | IDENT <ClosureEvalExpression> | <Closure> |
+
+<List> | <MapList>
+
+<RelOp> ::= | | & | == | != | < | > | ≤ | ≥
+
+<WeakOp> ::= + | -
+
+<StrongOp> ::= * | /
+
+<VeryStrongOp> ∷= ≪ | ≫

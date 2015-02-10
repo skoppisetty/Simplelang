@@ -27,8 +27,8 @@ public class Scanner {
 	private String[] seperator_keys= {".","..",";",",","(",")","[","]","{","}",":","?"};
 	private Kind[] seperator_values= {DOT,RANGE,SEMICOLON,COMMA,LPAREN,RPAREN,LSQUARE,RSQUARE,LCURLY,RCURLY,COLON,QUESTION };
 
-	private String[] keyword_keys= {"int" , "string" , "boolean" , "import" , "class" , "def" , "while" , "if" , "else" , "return" , "print", "true", "false" , "null"};
-	private Kind[] keyword_values= {KW_INT, KW_STRING, KW_BOOLEAN, KW_IMPORT, KW_CLASS, KW_DEF, KW_WHILE, KW_IF, KW_ELSE, KW_RETURN, KW_PRINT,  BL_TRUE, BL_FALSE, NL_NULL};
+	private String[] keyword_keys= {"int" , "string" , "boolean" , "import" , "class" , "def" , "while" , "if" , "else" , "return" , "print", "true", "false" , "null", "size", "value", "key"};
+	private Kind[] keyword_values= {KW_INT, KW_STRING, KW_BOOLEAN, KW_IMPORT, KW_CLASS, KW_DEF, KW_WHILE, KW_IF, KW_ELSE, KW_RETURN, KW_PRINT,  BL_TRUE, BL_FALSE, NL_NULL, KW_SIZE, KW_VALUE, KW_KEY};
 	
 	
 	private String[] operator_keys= {"=","|","&","==","!=","<",">","<=",">=","+","-","*","/","%","!","<<",">>","->","@"};
@@ -114,6 +114,10 @@ public class Scanner {
 							start_line = linenumber;
 							begin++;
 							
+						}
+						else {
+							t = stream.new Token(DIV, begin, begin+1, linenumber);
+							state = State.Done;
 						}
 					}
 					else if(character == '-'){
