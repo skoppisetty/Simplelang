@@ -299,4 +299,29 @@ public class TestSimpleParser {
 		System.out.println(input);
 		parseCorrectInput(input);
 	} 	
+	
+	@Test
+	public void size() throws SyntaxException {
+		System.out.println("size");
+		String input = "class A {def C={->x= &y; z = !y;};} ";
+		System.out.println(input);
+		parseIncorrectInput(input,AND);
+	}
+	
+	@Test
+	public void key() throws SyntaxException {
+		System.out.println("key");
+		String input = "class A {def C={->x= &y; z = !y;};} ";
+		System.out.println(input);
+		parseIncorrectInput(input,AND);
+	}
+	
+	@Test
+	public void value() throws SyntaxException {
+		System.out.println("value");
+		String input = "class A {def C={->x= &y; z = !y;};} ";
+		System.out.println(input);
+		parseIncorrectInput(input,AND);
+	}
+
 }

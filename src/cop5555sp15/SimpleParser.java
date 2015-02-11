@@ -102,10 +102,6 @@ public class SimpleParser {
 	ArrayList<Kind> factor_list = new ArrayList<Kind>();
 	ArrayList<Kind> first_factor = new ArrayList<Kind>();
 	
-	
-	
-	
-	
 
 	SimpleParser(TokenStream tokens) {
 		this.tokens = tokens;
@@ -173,14 +169,12 @@ public class SimpleParser {
 	}
 
 	private void ImportList() throws SyntaxException {
-		while(t.kind != KW_CLASS){
+		while(isKind(KW_IMPORT)){
 			match(KW_IMPORT);
 			match(IDENT);
-			while(t.kind != SEMICOLON){
-				if(t.kind == DOT){
+			while(isKind(DOT)){
 					match(DOT);
 					match(IDENT);
-				}
 			}
 			match(SEMICOLON);
 		}
@@ -204,30 +198,26 @@ public class SimpleParser {
 	
 
 	private void declaration() throws SyntaxException {
-		// TODO Auto-generated method stub
 		match(KW_DEF);
 		match(IDENT);
-		if(t.kind == COLON){
+		if(isKind(COLON)){
 			vardec();
 		}
-		else if(t.kind == ASSIGN){
+		else if(isKind(ASSIGN)){
 			closuredec();
 		}
-		
+		// ignore else as vardec can go to null
 	}
 
 	private void vardec() throws SyntaxException{
-		
-			if(isKind(COLON)){
-				match(COLON);
-				type();
-			}
+		match(COLON);
+		type();
+		// null case doesn't come to this function
 	}
 
 
 	private void type() throws SyntaxException{
-		// TODO Auto-generated method stub
-		if(t.kind == KW_INT || t.kind == KW_BOOLEAN || t.kind == KW_STRING){
+		if(isKind(KW_INT) || isKind(KW_BOOLEAN) || isKind(KW_STRING)){
 			simpletype();
 		}
 		else if(isKind(AT)){
@@ -245,8 +235,7 @@ public class SimpleParser {
 	}
 
 	private void simpletype()  throws SyntaxException {
-		// TODO Auto-generated method stub
-		if(t.kind == KW_INT || t.kind == KW_BOOLEAN || t.kind == KW_STRING){
+		if(isKind(KW_INT) || isKind(KW_BOOLEAN) || isKind(KW_STRING)){
 			consume();
 		}
 		else{
@@ -274,7 +263,6 @@ public class SimpleParser {
 	private void closuredec() throws SyntaxException {
 		match(ASSIGN);
 		closure();
-		
 	}
 
 
@@ -282,7 +270,7 @@ public class SimpleParser {
 		match(LCURLY);
 		formalarglist();
 		match(ARROW);
-		while(t.kind != RCURLY){
+		while(!isKind(RCURLY)){
 			statement();
 			match(SEMICOLON);
 		}
@@ -291,11 +279,10 @@ public class SimpleParser {
 
 
 	private void formalarglist() throws SyntaxException{
-		System.out.println("check");
-		if(t.kind == IDENT){
+		if(isKind(IDENT)){
 			match(IDENT);
 			vardec();
-			while(t.kind != ARROW){
+			while(isKind(COMMA)){
 				match(COMMA);
 				match(IDENT);
 				vardec();	
@@ -304,45 +291,46 @@ public class SimpleParser {
 	}
 
 	private void statement() throws SyntaxException{
-		System.out.println("statement");
-		if(t.kind == KW_PRINT){
+		if(isKind(KW_PRINT)){
 			match(KW_PRINT);
 			expression();
 		}
-		else if(t.kind == KW_WHILE){
+		else if(isKind(KW_WHILE)){
 			match(KW_WHILE);
-			if(t.kind == TIMES){
+			if(isKind(TIMES)){
 				match(TIMES);
 			}
 			match(LPAREN);
 			expression();
-			if(t.kind == RANGE){
+			if(isKind(RANGE)){
 				match(RANGE);
 				expression();
 			}
+			// merged all while loop conditions
+			// removed range expression production as its used in only one place
 			match(RPAREN);
 			Block();
 		}
-		else if(t.kind == KW_IF){
+		else if(isKind(KW_IF)){
 			match(KW_IF);
 			match(LPAREN);
 			expression();
 			match(RPAREN);
 			Block();
-			if(t.kind == KW_ELSE){
+			if(isKind(KW_ELSE)){
 				match(KW_ELSE);
 				Block();
 			}
 		}
-		else if(t.kind == MOD){
+		else if(isKind(MOD)){
 			match(MOD);
 			expression();
 		}
-		else if(t.kind == KW_RETURN){
+		else if(isKind(KW_RETURN)){
 			match(KW_RETURN);
 			expression();
 		}
-		else if(t.kind == IDENT){
+		else if(isKind(IDENT)){
 			lvalue();
 			match(ASSIGN);
 			expression();
@@ -360,9 +348,8 @@ public class SimpleParser {
 	
 	private void lvalue() throws SyntaxException {
 		match(IDENT);
-		if(t.kind == LSQUARE){
+		if(isKind(LSQUARE)){
 			match(LSQUARE);
-			System.out.println("lvalue");
 			expression();
 			match(RSQUARE);
 		}
@@ -370,6 +357,8 @@ public class SimpleParser {
 	}
 	
 	private void list() throws SyntaxException{
+		// removed @ from list as it is making LL(2)
+		// matched it in factor before this function gets called
 		match(LSQUARE);
 		expressionlist();
 		match(RSQUARE);
@@ -378,7 +367,7 @@ public class SimpleParser {
 	private void expressionlist() throws SyntaxException {
 		if(first_factor.contains(t.kind)){
 			expression();
-			while(t.kind == COMMA){
+			while(isKind(COMMA)){
 				match(COMMA);
 				expression();
 			}
@@ -395,7 +384,7 @@ public class SimpleParser {
 	private void keyvaluelist() throws SyntaxException{
 		if(first_factor.contains(t.kind)){
 			keyvalueexpression();
-			while(t.kind == COMMA){
+			while(isKind(COMMA)){
 				match(COMMA);
 				keyvalueexpression();
 			}
@@ -403,6 +392,7 @@ public class SimpleParser {
 	}
 	
 	private void maplist() throws SyntaxException {
+		// already removed AT to make LL1 check LIST(). only one AT left
 		match(AT);
 		match(LSQUARE);
 		keyvaluelist();
@@ -446,41 +436,42 @@ public class SimpleParser {
 	}
 	
 	private void factor() throws SyntaxException {
-		if(t.kind == IDENT){
+		if(isKind(IDENT)){
 			match(IDENT);
-			if(t.kind == LSQUARE){
+			if(isKind(LSQUARE)){
 				match(LSQUARE);
 				expression();
 				match(RSQUARE);
 			}
-			else if(t.kind == LPAREN){
+			else if(isKind(LPAREN)){
 				closureevalexpression();
 			}
 		}
 		else if(factor_list.contains(t.kind)){
 			consume();
+			// int_lit true false and string lit
 		}
-		else if(t.kind == LPAREN){
+		else if(isKind(LPAREN)){
 			match(LPAREN);
 			expression();
 			match(RPAREN);
 		}
-		else if(t.kind == NOT || t.kind == MINUS){
+		else if(isKind(NOT) || isKind(MINUS)){
 			consume();
 			factor();
 		}
-		else if(t.kind == KW_SIZE ||t.kind == KW_KEY | t.kind == KW_VALUE){
+		else if(isKind(KW_SIZE) || isKind(KW_KEY) | isKind(KW_VALUE)){
 			consume();
 			match(LPAREN);
 			expression();
 			match(RPAREN);
 		}
-		else if(t.kind == LCURLY){
+		else if(isKind(LCURLY)){
 			closure();
 		}
-		else if(t.kind == AT){
+		else if(isKind(AT)){
 			consume();
-			if(t.kind == AT){
+			if(isKind(AT)){
 				maplist();
 			}
 			else{
