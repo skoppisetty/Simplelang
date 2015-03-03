@@ -1,0 +1,58 @@
+
+No the given phrase is not LL(1). But you can make it LL(1) using Left Factoring. For instance the 
+
+<Declaration> ::=  def <VarDec> | def <ClosureDec>
+
+The given will be LL(1) if they have distinct First sets. But the First sets of productions for Declaration are not distinct
+<Declaration> ::=  def <VarDec>  is "def"
+<Declaration> ::=  def <ClosureDec> is "def"
+
+They both have def as their First set. But if you take Left Factoring the term Declaration can be simplified to 
+
+<Declaration> ::=  		def IDENT <New_Term>
+<New_Term>    ::= 		<VarDec> | <ClosureDec> 
+<VarDec>      ::= 		:<Type> | ε
+<ClosureDec> ::= 	    = <> | ε
+
+and the new first of 
+<Declaration> 				 "def"
+<New_Term> -> <VarDec> 		 : 
+<New_Term> -> <ClosureDec> 	 =
+
+All are mutually exclusive . Therefore the given grammar can be converted to LL(1).
+
+Some other similar issues persists for List, Map and so on.
+
+
+Predict sets of Factor:
+
+<Factor> ::=  IDENT	IDENT
+<Factor> ::=  IDENT [ <Expression> ]	IDENT
+<Factor> ::=  INT_LIT	INT_LIT
+<Factor> ::=  true	true
+<Factor> ::=  false	false
+<Factor> ::=  STRING_LIT	STRING_LIT
+<Factor> ::=  ( <Expression> )	(
+<Factor> ::=  ! <Factor>	!
+<Factor> ::=  -<Factor>	-
+<Factor> ::=  size(<Expression> )	size
+<Factor> ::=  key(<Expression )	key
+<Factor> ::=  value(<Expression >)	value
+<Factor> ::=  <ClosureEvalExpression>	IDENT
+<Factor> ::=  <Closure>	{
+<Factor> ::=  <List>	@
+<Factor> ::=  <MapList>	@
+
+
+Predict sets of Statement:
+
+<Statement> ::=  <LValue> = <Expression>	IDENT
+<Statement> ::=  print <Expression>	print
+<Statement> ::=  while (<Expression>) <Block>	while
+<Statement> ::=  while* ( <Expression> ) <Block>	while
+<Statement> ::=  while* ( <Expression> .. <Expression> ) <Block>	while*
+<Statement> ::=  if (<Expression> ) <Block>	if
+<Statement> ::=  if (<Expression>) <Block> else <Block>	if
+<Statement> ::=  %<Expression>	% 
+<Statement> ::=  return <Expression>	return
+<Statement> ::=  ε	;

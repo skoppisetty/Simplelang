@@ -1,28 +1,40 @@
-<Program> ::= <ImportList> class IDEN T <Block>
+<Program> ->
+ <ImportList> class IDEN T <Block>
 
-<ImportList> ∷=( import IDENT ( . IDENT )* ;) *
+<ImportList> ->
+( import IDENT ( . IDENT )* ;) *
 
-<Block> ∷= { (<Declaration> ; | <Statement> ; )* }
+<Block> ->
+ { (<Declaration> ; | <Statement> ; )* }
 
 <Declaration> :≔ def IDENT ( <VarDec> | <ClosureDec> )
 
-<VarDec> ∷=  (: <Type> | ε )
+<VarDec> ->
+  (: <Type> | ε )
 
-<Type> ::= <SimpleType> | @ (<KeyValueType> | <ListType>)
+<Type> ->
+ <SimpleType> | @ (<KeyValueType> | <ListType>)
 
-<SimpleType> ::= int | boolean | string
+<SimpleType> ->
+ int | boolean | string
 
-<KeyValueType> ::= @ [ <SimpleType> : <Type>]
+<KeyValueType> ->
+ @ [ <SimpleType> : <Type>]
 
-<ListType> ∷=  [ <Type> ]
+<ListType> ->
+  [ <Type> ]
 
-<ClosureDec> ∷=  = <Closure>
+<ClosureDec> ->
+  = <Closure>
 
-<Closure> ∷ = { <FormalArgList> - > (<Statement> ;)*}
+<Closure> ->
+ { <FormalArgList> - > (<Statement> ;)*}
 
-<FormalArgList> ∷= ε | IDENT <VarDec> (, IDENT <VarDec>)*
+<FormalArgList> ->
+ ε | IDENT <VarDec> (, IDENT <VarDec>)*
 
-<Statement> ::= <LValue> = <Expression>
+<Statement> ->
+ <LValue> = <Expression>
 
 				| print <Expression>
 
@@ -42,27 +54,41 @@
 
 				| ε
 
-<ClosureEvalExpression> ∷= (<ExpressionList>)
+<ClosureEvalExpression> ->
+ (<ExpressionList>)
 
-<LValue> ::= IDENT ( ε | [ <Expression> ] ) 
+<LValue> ->
+ IDENT ( ε | [ <Expression> ] ) 
 
-<List> ∷=@ [ <ExpressionList> |<ExpressionList> ∷= ε | <Expression> ( , <Expression> )*
+<List> ->
+@ [ <ExpressionList> ]
 
-<KeyValueExpression> ::= <Expression> : <Expression>
+<ExpressionList> ->
+ ε | <Expression> ( , <Expression> )*
 
-<KeyValueList> ∷= ε | <KeyValueExpression> ( , <KeyValueExpression> ) *
+<KeyValueExpression> ->
+ <Expression> : <Expression>
 
-<MapList> ∷= @@[ <KeyValueList> ]
+<KeyValueList> ->
+ ε | <KeyValueExpression> ( , <KeyValueExpression> ) *
 
-<Expression> ::= <Term> (<RelOp> <Term>)*
+<MapList> ->
+ @@[ <KeyValueList> ]
 
-<Term> ::= <Elem> (<WeakOp> <Elem>)*
+<Expression> ->
+ <Term> (<RelOp> <Term>)*
 
-<Elem> ::= <Thing> ( <StrongOp> <Thing>)*
+<Term> ->
+ <Elem> (<WeakOp> <Elem>)*
 
-<Thing> ∷= <Factor> ( <VeryStrongOp> <Factor )*
+<Elem> ->
+ <Thing> ( <StrongOp> <Thing>)*
 
-<Factor>::= IDENT | IDENT [ <Expression> ] | INT_LIT | true | false | STRING_LIT
+<Thing> ->
+ <Factor> ( <VeryStrongOp> <Factor )*
+
+<Factor>->
+ IDENT | IDENT [ <Expression> ] | INT_LIT | true | false | STRING_LIT
 
 | ( <Expression> ) | ! <Factor> | -<Factor> | size(<Expression> ) |
 
@@ -70,10 +96,14 @@ key(<Expression ) | value(<Expression >) | IDENT <ClosureEvalExpression> | <Clos
 
 <List> | <MapList>
 
-<RelOp> ::= | | & | == | != | < | > | ≤ | ≥
+<RelOp> ->
+ | | & | == | != | < | > | ≤ | ≥
 
-<WeakOp> ::= + | -
+<WeakOp> ->
+ + | -
 
-<StrongOp> ::= * | /
+<StrongOp> ->
+ * | /
 
-<VeryStrongOp> ∷= ≪ | ≫
+<VeryStrongOp> ->
+ ≪ | ≫
