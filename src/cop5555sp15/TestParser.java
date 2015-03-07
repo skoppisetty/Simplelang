@@ -191,7 +191,7 @@ public class TestParser {
 	@Test
 	public void statements2()throws SyntaxException {
 		System.out.println("***********\nstatements2");
-		String input = "class A  {\n while (x) {};  \n while* (1..4){}; } ";
+		String input = "class A  {\n while (x) {};  \n while* (1..4){}; \n while*(x>0){}; } ";
 		System.out.println(input);
 		System.out.println(parseCorrectInput(input));
 	} 

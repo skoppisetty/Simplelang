@@ -50,10 +50,10 @@ import static cop5555sp15.TokenStream.Kind.TIMES;
 import static cop5555sp15.TokenStream.Kind.KW_SIZE;
 import static cop5555sp15.TokenStream.Kind.KW_KEY;
 import static cop5555sp15.TokenStream.Kind.KW_VALUE;
+import cop5555sp15.Parser.SyntaxException;
 import cop5555sp15.TokenStream.Kind;
 import cop5555sp15.TokenStream.Token;
-
-import cop5555sp15.ast.Program;
+import cop5555sp15.ast.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,7 +121,7 @@ public class Parser {
 		}
 		throw new SyntaxException(t, kind);
 	}
-
+	
 	private Kind match(Kind... kinds) throws SyntaxException {
 		Kind kind = t.kind;
 		if (isKind(kinds)) {
@@ -132,8 +132,23 @@ public class Parser {
 		for (Kind kind1 : kinds) {
 			sb.append(kind1).append(kind1).append(" ");
 		}
-		throw new SyntaxException(t, "expected one of " + sb.toString());
+		SyntaxException e = new SyntaxException(t, "expected one of " + sb.toString());
+		exceptionList.add(e);
+		throw e;
 	}
+	
+//	private Kind match(Kind... kinds) throws SyntaxException {
+//		Kind kind = t.kind;
+//		if (isKind(kinds)) {
+//			consume();
+//			return kind;
+//		}
+//		StringBuilder sb = new StringBuilder();
+//		for (Kind kind1 : kinds) {
+//			sb.append(kind1).append(kind1).append(" ");
+//		}
+//		throw new SyntaxException(t, "expected one of " + sb.toString());
+//	}
 
 	private boolean isKind(Kind kind) {
 		return (t.kind == kind);
@@ -160,7 +175,7 @@ public class Parser {
 	static final Kind[] VERY_STRONG_OPS = { LSHIFT, RSHIFT };
 
 
-	public Program parse() throws SyntaxException {
+	public Program parse(){
 		Program p = null;
 		try {
 			p = Program();
@@ -175,326 +190,489 @@ public class Parser {
 			return null;
 	}
 
-	private void Program() throws SyntaxException {
-		ImportList();
-		match(KW_CLASS);
-		match(IDENT);
-		Block();
+	private Program Program() throws SyntaxException{
+		List<QualifiedName> imports = ImportList();
+		try {
+			match(KW_CLASS);
+		} catch (SyntaxException e) {
+			exceptionList.add(e);
+		}
+		Token program_token = t;
+		String program_name = t.getText();
+		try {
+			match(IDENT);
+		} catch (SyntaxException e) {
+			exceptionList.add(e);
+		}
+		Block block = Block();
+		Program prog = new Program(t,imports,program_name,block);
+		return prog;
 	}
 
-	private void ImportList() throws SyntaxException {
+	private List<QualifiedName> ImportList() throws SyntaxException{
+		List<QualifiedName> imports = new ArrayList<QualifiedName>();
 		while(isKind(KW_IMPORT)){
+			Token temp_import = t;
 			match(KW_IMPORT);
+			String s = t.getText();
 			match(IDENT);
 			while(isKind(DOT)){
 					match(DOT);
+					s += "/" + t.getText();
 					match(IDENT);
 			}
+			QualifiedName qname = new QualifiedName(temp_import,s);
+			imports.add(qname);
 			match(SEMICOLON);
 		}
-		
+		return imports;
 	}
 
-	private void Block() throws SyntaxException {
+	private Block Block() throws SyntaxException{
+		Token block_first = t;
 		match(LCURLY);
+		List<BlockElem> elems = new ArrayList<BlockElem>();
 		while(!isKind(RCURLY)){
+			BlockElem e;
 			if(predict_declaration.contains(t.kind)){
-				declaration();
+				e = declaration();
 				match(SEMICOLON);
 			}
 			else{
-				statement();
+				e = statement();
 				match(SEMICOLON);
 			}
+			if(e != null){
+				elems.add(e);
+			}
 		}
+		Block block = new Block(block_first, elems);
 		match(RCURLY);
+		return block;
 	}
 	
 
-	private void declaration() throws SyntaxException {
+	private Declaration declaration() throws SyntaxException {
+		Token defToken = t;
 		match(KW_DEF);
+		Token identToken = t;
 		match(IDENT);
-		if(isKind(COLON)){
-			vardec();
+		Declaration d = null;
+		if(isKind(ASSIGN)){
+			d = closuredec(defToken,identToken);
 		}
-		else if(isKind(ASSIGN)){
-			closuredec();
+		else {
+			d = vardec(defToken,identToken);
 		}
 		// ignore else as vardec can go to null
+		return d;
 	}
 
-	private void vardec() throws SyntaxException{
-		match(COLON);
-		type();
+	private VarDec vardec(Token defToken, Token identToken) throws SyntaxException{
+		Type vardecType = null;
+		if(isKind(COLON)){
+			match(COLON);
+			vardecType = type();
+		}
+		else{
+			vardecType = new UndeclaredType(defToken);
+		}		
+		VarDec var = new VarDec(defToken,identToken,vardecType);
+		return var;
 		// null case doesn't come to this function
 	}
 
 
-	private void type() throws SyntaxException{
+	private Type type() throws SyntaxException{
+		Type type = null;
 		if(isKind(KW_INT) || isKind(KW_BOOLEAN) || isKind(KW_STRING)){
-			simpletype();
+			type = simpletype();
 		}
 		else if(isKind(AT)){
+			Token first = t;
 			match(AT);
 			if(t.kind == AT){
-				keyvaluetype();
+				type = keyvaluetype(first);
 			}
 			else {
-				listtype();
+				type = listtype(first);
 			}
 		}
 		else {
 			throw new SyntaxException(t, "expected one of type");
-		}		
+		}
+		return type;
 	}
 
-	private void simpletype()  throws SyntaxException {
+	private SimpleType simpletype()  throws SyntaxException {
 		if(isKind(KW_INT) || isKind(KW_BOOLEAN) || isKind(KW_STRING)){
+			Token simpletoken = t;
+			SimpleType s = new SimpleType(t,t);
 			consume();
+			return s;
 		}
 		else{
 			throw new SyntaxException(t, "expected one of simpletype");
 		}
 	}
 	
-	private void keyvaluetype()  throws SyntaxException{
+	private KeyValueType keyvaluetype(Token first)  throws SyntaxException{
 		// TODO Auto-generated method stub
 		match(AT);
 		match(LSQUARE);
-		simpletype();
+		SimpleType type = simpletype();
 		match(COLON);
-		type();
+		Type k_type = type();
 		match(RSQUARE);
+		KeyValueType k = new KeyValueType(first,type, k_type);
+		return k;
 	}
 
-	private void listtype()  throws SyntaxException{
+	private ListType listtype(Token first)  throws SyntaxException{
 		// TODO Auto-generated method stub
 		match(LSQUARE);
-		type();
+		Type l_type = type();
 		match(RSQUARE);
+		ListType k = new ListType(first, l_type);
+		return k;
 	}
 	
-	private void closuredec() throws SyntaxException {
+	private ClosureDec closuredec(Token defToken, Token identToken) throws SyntaxException {
 		match(ASSIGN);
-		closure();
+		Closure c = closure();
+		ClosureDec close = new ClosureDec(defToken,identToken,c);
+		return close;
 	}
 
 
-	private void closure() throws SyntaxException{
+	private Closure closure() throws SyntaxException{
+		List<VarDec>formalArgList = new ArrayList<VarDec>();
+		List<Statement> statementList = new ArrayList<Statement>();
+		Token firsttoken = t;
 		match(LCURLY);
-		formalarglist();
+		formalArgList = formalarglist();
 		match(ARROW);
 		while(!isKind(RCURLY)){
-			statement();
+			Statement s  = statement();
+			statementList.add(s);
 			match(SEMICOLON);
 		}
 		match(RCURLY);
+		
+		Closure c = new Closure(firsttoken, formalArgList,statementList); 
+		return c;
 	}
 
 
-	private void formalarglist() throws SyntaxException{
+	private List<VarDec> formalarglist() throws SyntaxException{
+		List<VarDec>formalArgList = new ArrayList<VarDec>();
 		if(isKind(IDENT)){
+			Token ident = t;
 			match(IDENT);
-			vardec();
+			VarDec v = vardec(ident, ident);
+			formalArgList.add(v);
 			while(isKind(COMMA)){
 				match(COMMA);
+				ident = t;
 				match(IDENT);
-				vardec();	
+				v = vardec(ident,ident);	
+				formalArgList.add(v);
 			}
 		}
+		return formalArgList;
 	}
 
-	private void statement() throws SyntaxException{
+	private Statement statement() throws SyntaxException{
+		Token firstToken = t;
+		Statement stat = null;
 		if(isKind(KW_PRINT)){
 			match(KW_PRINT);
-			expression();
+			Expression e = expression();
+			stat = new PrintStatement(firstToken,e);
 		}
 		else if(isKind(KW_WHILE)){
 			match(KW_WHILE);
+			boolean times = false;
+			boolean range = false;
 			if(isKind(TIMES)){
+				times = true;
 				match(TIMES);
 			}
 			match(LPAREN);
-			expression();
+			Expression e = expression();
+			RangeExpression rangeEx = null;
 			if(isKind(RANGE)){
+				range = true;
 				match(RANGE);
-				expression();
+				Expression upper = expression();
+				rangeEx = new RangeExpression(firstToken, e ,upper);
 			}
+			
 			// merged all while loop conditions
 			// removed range expression production as its used in only one place
 			match(RPAREN);
-			Block();
+			Block block = Block();
+			if(!times && !range){
+				stat = new WhileStatement(firstToken, e, block);
+			}
+			else if(range){
+				stat = new WhileRangeStatement(firstToken,rangeEx, block);
+			}
+			else{
+				stat = new WhileStarStatement(firstToken, e, block);
+			}
+			
 		}
 		else if(isKind(KW_IF)){
+			
 			match(KW_IF);
 			match(LPAREN);
-			expression();
+			Expression e = expression();
 			match(RPAREN);
-			Block();
+			Block ifblock = Block();
+			stat = new IfStatement(firstToken,e, ifblock);
 			if(isKind(KW_ELSE)){
 				match(KW_ELSE);
-				Block();
+				Block elseblock = Block();
+				stat = new IfElseStatement(firstToken, e, ifblock, elseblock);
 			}
+			
 		}
 		else if(isKind(MOD)){
+			Token first = t;
 			match(MOD);
-			expression();
+			Expression e = expression();
+			stat = new ExpressionStatement(first, e);
 		}
 		else if(isKind(KW_RETURN)){
 			match(KW_RETURN);
-			expression();
+			Expression e = expression();
+			stat = new ReturnStatement(firstToken, e);
+
 		}
 		else if(isKind(IDENT)){
-			lvalue();
+			LValue val = lvalue();
 			match(ASSIGN);
-			expression();
+			Expression e = expression();
+			stat = new AssignmentStatement(firstToken, val, e);
 		}
-		
+		return stat;
 	}
 	
-	
-	private void closureevalexpression() throws SyntaxException {
+	private ClosureEvalExpression closureevalexpression(Token firsttoken) throws SyntaxException {
+		List<Expression> e_List = new ArrayList<Expression>();
 		match(LPAREN);
-		expressionlist();
+		e_List = expressionlist();
 		match(RPAREN);
-		
+		ClosureEvalExpression c = new ClosureEvalExpression(firsttoken,firsttoken,e_List);
+		return c;
 	}
 	
-	private void lvalue() throws SyntaxException {
+	private LValue lvalue() throws SyntaxException {
+		Token firsttoken = t;
 		match(IDENT);
+		LValue lval = null;
 		if(isKind(LSQUARE)){
 			match(LSQUARE);
-			expression();
+			Expression e = expression();
 			match(RSQUARE);
+			lval = new ExpressionLValue(firsttoken, firsttoken,e);
 		}
-		
+		else{
+			lval = new IdentLValue(firsttoken, firsttoken);
+		}
+		return lval;
 	}
 	
-	private void list() throws SyntaxException{
+	private List<Expression> list() throws SyntaxException{
 		// removed @ from list as it is making LL(2)
 		// matched it in factor before this function gets called
 		match(LSQUARE);
-		expressionlist();
+		List<Expression> elist = expressionlist();
 		match(RSQUARE);
+		return elist;
 	}
 
-	private void expressionlist() throws SyntaxException {
+	private List<Expression> expressionlist() throws SyntaxException {
+		List<Expression> elist = new ArrayList<Expression>();
 		if(first_factor.contains(t.kind)){
-			expression();
+			Expression e = expression();
+			elist.add(e);
 			while(isKind(COMMA)){
 				match(COMMA);
-				expression();
+				e = expression();
+				elist.add(e);
 			}
 		}
+		return elist;
 		
 	}
 	
-	private void keyvalueexpression() throws SyntaxException{
-		expression();
+	private KeyValueExpression keyvalueexpression() throws SyntaxException{
+		Token firstToken = t;
+		Expression key = expression();
 		match(COLON);
-		expression();
+		Expression value = expression();
+		KeyValueExpression k = new KeyValueExpression(firstToken,key, value);
+		return k;
 	}
 	
-	private void keyvaluelist() throws SyntaxException{
+	private List<KeyValueExpression> keyvaluelist() throws SyntaxException{
+		List<KeyValueExpression> klist = new ArrayList<KeyValueExpression>();
+		KeyValueExpression k = null;
 		if(first_factor.contains(t.kind)){
-			keyvalueexpression();
+			k = keyvalueexpression();
+			klist.add(k);
 			while(isKind(COMMA)){
 				match(COMMA);
-				keyvalueexpression();
+				k = keyvalueexpression();
+				klist.add(k);
 			}
 		}
+		
+		return klist;
 	}
 	
-	private void maplist() throws SyntaxException {
+	private List<KeyValueExpression> maplist() throws SyntaxException {
 		// already removed AT to make LL1 check LIST(). only one AT left
 		match(AT);
 		match(LSQUARE);
-		keyvaluelist();
+		List<KeyValueExpression> klist = keyvaluelist();
 		match(RSQUARE);
-		
+		return klist;
 	}
 
-	private void expression() throws SyntaxException {
-		term();
+	private Expression expression() throws SyntaxException {
+		Token first = t;
+		Expression e1 = term();
 		while(Arrays.asList(REL_OPS).contains(t.kind)){
+			Token op = t;
 			relop();
-			term();
+			Expression e2 = term();
+			e1 = new BinaryExpression(first,e1,op, e2);	
 		}
-		
+		return e1;
 	}
 
-	private void term() throws SyntaxException {
-		elem();
+	private Expression term() throws SyntaxException {
+		Token first = t;
+		Expression e1 = elem();
 		while(Arrays.asList(WEAK_OPS).contains(t.kind)){
+			Token op = t;
 			weakop();
-			elem();
+			Expression e2 = elem();
+			e1 = new BinaryExpression(first,e1,op, e2);
 		}		
+		return e1;
 	}
 
-	private void elem() throws SyntaxException {
-		thing();
+	private Expression elem() throws SyntaxException {
+		Token first = t;
+		Expression e1 = thing();
 		while(Arrays.asList(STRONG_OPS).contains(t.kind)){
+			Token op = t;
 			strongop();
-			thing();
+			Expression e2 = thing();
+			e1 = new BinaryExpression(first,e1,op, e2);
 		}
+		return e1;
 		
 	}
 
-	private void thing() throws SyntaxException {
-		factor();
+	private Expression thing() throws SyntaxException {
+		Token first = t;
+		Expression e1 = factor();
 		while(Arrays.asList(VERY_STRONG_OPS).contains(t.kind)){
+			Token op = t;
 			verystrongop();
-			factor();
+			Expression e2 =  factor();
+			e1 = new BinaryExpression(first,e1,op, e2);
 		}
-		
+		return e1;
 	}
 	
-	private void factor() throws SyntaxException {
+	private Expression factor() throws SyntaxException {
+		Token first = t;
+		Expression fact = null;
 		if(isKind(IDENT)){
 			match(IDENT);
 			if(isKind(LSQUARE)){
 				match(LSQUARE);
-				expression();
+				Expression e = expression();
 				match(RSQUARE);
+				fact = new ListOrMapElemExpression(first, first,e);
 			}
 			else if(isKind(LPAREN)){
-				closureevalexpression();
+				fact = closureevalexpression(first);
+			}
+			else{
+				fact = new IdentExpression(first, first);
 			}
 		}
 		else if(factor_list.contains(t.kind)){
+			if(isKind(INT_LIT)){
+				fact = new IntLitExpression(first, first.getIntVal());
+			}
+			else if(isKind(STRING_LIT)){
+				fact = new StringLitExpression(first, first.getText());
+			}
+			else{
+				fact = new BooleanLitExpression(first, Boolean.valueOf(first.getText()));
+			}
 			consume();
 			// int_lit true false and string lit
+			
 		}
 		else if(isKind(LPAREN)){
 			match(LPAREN);
-			expression();
+			fact = expression();
 			match(RPAREN);
 		}
 		else if(isKind(NOT) || isKind(MINUS)){
 			consume();
-			factor();
+			Expression f = factor();
+			fact = new UnaryExpression(first,first,f);
 		}
-		else if(isKind(KW_SIZE) || isKind(KW_KEY) | isKind(KW_VALUE)){
+		else if(isKind(KW_SIZE)){
 			consume();
 			match(LPAREN);
-			expression();
+			Expression f = expression();
 			match(RPAREN);
+			fact = new SizeExpression(first,f);
+		}
+		else if(isKind(KW_KEY)){
+			consume();
+			match(LPAREN);
+			Expression f = expression();
+			match(RPAREN);
+			fact = new KeyExpression(first,f);
+		}
+		else if(isKind(KW_VALUE)){
+			consume();
+			match(LPAREN);
+			Expression f = expression();
+			match(RPAREN);
+			fact = new ValueExpression(first,f);
 		}
 		else if(isKind(LCURLY)){
-			closure();
+			Closure close = closure();
+			fact = new ClosureExpression(first,close);
 		}
 		else if(isKind(AT)){
 			consume();
 			if(isKind(AT)){
-				maplist();
+				List<KeyValueExpression> mapList  = maplist();
+				fact = new MapListExpression(first, mapList);
 			}
 			else{
-				list();
+				List<Expression> elist = list();
+				fact = new ListExpression(first, elist);
 			}
 		}
 		else{
 			throw new SyntaxException(t, "expected one of factor");
 		}	
+		return fact;
 	}
 
 
@@ -536,6 +714,12 @@ public class Parser {
 		first_factor.add(KW_KEY);
 		first_factor.add(AT);
 		first_factor.add(LCURLY);
+	}
+
+
+	public List<SyntaxException> getExceptionList() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
