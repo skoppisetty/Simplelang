@@ -57,7 +57,21 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	public Object visitAssignmentStatement(
 			AssignmentStatement assignmentStatement, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		VarDec dec = (VarDec) symbolTable.lookup(assignmentStatement.lvalue.firstToken.getText());
+//		dec.type.getJVMType()
+		if( dec != null){
+			assignmentStatement.lvalue.setType(dec.type.getJVMType());
+			assignmentStatement.expression.visit(this, arg);
+			if( assignmentStatement.lvalue.getType() == assignmentStatement.expression.getType()){
+				return assignmentStatement.lvalue.getType();
+			}
+			else{
+				throw new TypeCheckException("Type mismatch of assignment",assignmentStatement);
+			}
+		}
+		else{
+			throw new TypeCheckException("Using variables without declaring",assignmentStatement);
+		}
 	}
 
 	/**
@@ -170,7 +184,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	 */
 	@Override
 	public Object visitClosure(Closure closure, Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	/**
@@ -179,7 +193,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	 */
 	@Override
 	public Object visitClosureDec(ClosureDec closureDec, Object arg) {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	/**
@@ -190,26 +204,26 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	public Object visitClosureEvalExpression(
 			ClosureEvalExpression closureExpression, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitClosureExpression(ClosureExpression closureExpression,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitExpressionLValue(ExpressionLValue expressionLValue,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitExpressionStatement(
 			ExpressionStatement expressionStatement, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	/**
@@ -220,19 +234,32 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitIdentExpression(IdentExpression identExpression,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		VarDec dec = (VarDec) symbolTable.lookup(identExpression.identToken.getText());
+		if(dec == null){
+			throw new TypeCheckException("not declared ",identExpression );
+		}
+		else{
+			identExpression.setType(dec.type.getJVMType());
+			return identExpression.getType();
+		}
 	}
 
 	@Override
 	public Object visitIdentLValue(IdentLValue identLValue, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		Declaration dec = symbolTable.lookup(identLValue.identToken.getText());
+		if(dec == null){
+			throw new TypeCheckException("Not declared variable",identLValue);
+		}
+//		identLValue.setType(identLValue.type);
+		System.out.println(identLValue.type);
+		return identLValue.type;
 	}
 
 	@Override
 	public Object visitIfElseStatement(IfElseStatement ifElseStatement,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	/**
@@ -241,7 +268,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitIfStatement(IfStatement ifStatement, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	/**
@@ -257,19 +284,19 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitKeyExpression(KeyExpression keyExpression, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitKeyValueExpression(
 			KeyValueExpression keyValueExpression, Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitKeyValueType(KeyValueType keyValueType, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	// visit the expressions (children) and ensure they are the same type
@@ -280,7 +307,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitListExpression(ListExpression listExpression, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	/** gets the type from the enclosed expression */
@@ -288,18 +315,18 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	public Object visitListOrMapElemExpression(
 			ListOrMapElemExpression listOrMapElemExpression, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitListType(ListType listType, Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitMapListExpression(MapListExpression mapListExpression,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
@@ -339,26 +366,33 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitRangeExpression(RangeExpression rangeExpression,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	// nothing to do here
 	@Override
 	public Object visitReturnStatement(ReturnStatement returnStatement,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitSimpleType(SimpleType simpleType, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+//		simpleType.
+//		System.out.println(simpleType.type.getText());
+//		if(simpleType.type.getText() == "int"){
+//			
+//		}
+//		System.out.println();
+		
+		return simpleType.type.getText();		
 	}
 
 	@Override
 	public Object visitSizeExpression(SizeExpression sizeExpression, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
@@ -375,7 +409,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitUnaryExpression(UnaryExpression unaryExpression,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
@@ -388,7 +422,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitValueExpression(ValueExpression valueExpression,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	/**
@@ -396,7 +430,16 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	 */
 	@Override
 	public Object visitVarDec(VarDec varDec, Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		
+//		varDec.type.visit(this, arg);
+		Declaration dec1 = symbolTable.lookup(varDec.identToken.getText());
+		if(dec1 == null){
+			symbolTable.insert(varDec.identToken.getText(),varDec);
+		}
+		else{
+			throw new TypeCheckException("Already declared "+ varDec.identToken.getText() ,varDec);
+		}
+		return varDec.type.getJVMType();
 	}
 
 	/**
@@ -407,20 +450,20 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	public Object visitWhileRangeStatement(
 			WhileRangeStatement whileRangeStatement, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 
 	}
 
 	@Override
 	public Object visitWhileStarStatement(
 			WhileStarStatement whileStarStatement, Object arg) throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 	@Override
 	public Object visitWhileStatement(WhileStatement whileStatement, Object arg)
 			throws Exception {
-		throw new UnsupportedOperationException("not yet implemented");
+		System.out.println("Unimplemented"); throw new UnsupportedOperationException("not yet implemented");
 	}
 
 }
