@@ -120,7 +120,7 @@ public class TestCodeGenerationAssignment5 {
     @Test
     public void unaryMinus() throws Exception{
     	System.out.println("***********unaryMinus");
-    	String input = "class B {\n  print -4; print -3 + 4; \n}";
+    	String input = "class B {\n  print -4; print -3 + 4;  \n}";
     	System.out.println(input);
     	Program program = (Program) parseCorrectInput(input);
     	assertNotNull(program);
@@ -175,7 +175,7 @@ public class TestCodeGenerationAssignment5 {
     @Test
     public void if1() throws Exception{
     	System.out.println("***********if1");
-    	String input = "class B {\n  if (true) {\n    print \"true\";\n};\n  print \"done\";  \n}";
+    	String input = "class B {\n  if (true) {\n    print \"true\";\n};\n   print \"done\";  \n}";
     	System.out.println(input);
     	Program program = (Program) parseCorrectInput(input);
     	assertNotNull(program);
@@ -460,7 +460,7 @@ public class TestCodeGenerationAssignment5 {
  */
 public void list1() throws Exception{
 	System.out.println("***********list1");
-	String input = "class B {\ndef l1 : @[int];  \n  l1 = @[];  print  size(l1);  \n}";
+	String input = "class B {\ndef l1 : @[int];  \n  l1 = @[];   print  size(l1);  \n}";
 	System.out.println(input);
 	Program program = (Program) parseCorrectInput(input);
 	assertNotNull(program);
@@ -484,7 +484,7 @@ public void list1() throws Exception{
 @Test
 public void list2() throws Exception{
 	System.out.println("***********list2");
-	String input = "class B {\ndef l1 : @[int]; \n l1 = @[1,2,3];  print size(l1); \n}";
+	String input = "class B {\ndef l1 : @[int];  \n l1 = @[1,2,3];/*  print size(l1); */ \n}";
 	System.out.println(input);
 	Program program = (Program) parseCorrectInput(input);
 	assertNotNull(program);
@@ -528,7 +528,7 @@ public void list3() throws Exception{
 @Test
 public void list4() throws Exception{
 	System.out.println("***********list4");
-	String input = "class B {\ndef l1 : @[int]; \n l1 = @[1,2,3];  l1[2]=42;  print l1[0]; print l1[1]; print l1[2];\n}";
+	String input = "class B {\ndef l1 : @[int]; \n l1 = @[1,2,3];  l1[2]=42; print l1[0]; print l1[1]; print l1[2];\n}";
 	System.out.println(input);
 	Program program = (Program) parseCorrectInput(input);
 	assertNotNull(program);
@@ -641,16 +641,14 @@ public void listFail1() throws Exception{
 public void listFail2() throws Exception{
 	System.out.println("***********listFail2");
 	String input = "class B {\ndef l1 : @[boolean]; \n l1 = @[true, false]; "
-			+ "\n print l1[\"one\"];}";
-//			+ "\n l1[2]=true; "
-//			+ "\n print l1[0];\n print l1[\"one\"];\n print l1[2];"
-//			+ "\n}";
+			+ "\n l1[2]=true; "
+			+ "\n print l1[0];\n print l1[\"one\"];\n print l1[2];"
+			+ "\n}";
 	System.out.println(input);
 	Program program = (Program) parseCorrectInput(input);
  	typeCheckIncorrectAST(program);	
 }
 	
 }
-
 
 
