@@ -429,16 +429,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		int i = 0;
 		for (Expression elem : listExpression.expressionList) {
 			mv.visitInsn(DUP); 
-//			mv.visitIntInsn(BIPUSH, i);
 			elem.visit(this, arg);
-//			mv.visitVarInsn(ISTORE, i);
 			mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
 			mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "add", "(Ljava/lang/Object;)Z", false);
 			mv.visitInsn(POP);
-//			mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "add","(I)V");
-//			mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList","add",
-//				     "(Ljava/lang/Object;)Z");
-//			mv.visitInsn(POP);
 		}
 		return null;
 	}
@@ -448,10 +442,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 			throws Exception {
 		MethodVisitor mv = ((InheritedAttributes) arg).mv;
 		sizeExpression.expression.visit(this, arg);
-//		mv.visitInsn(ARRAYLENGTH);
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size","()I");       
-//		mv.visitTypeInsn(CHECKCAST, "java/lang/Integer"); 
-//		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer","intValue","()I"); 
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size","()I");        
 		sizeExpression.setType(intType);
 		return intType;
 	}
@@ -461,16 +452,14 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 			ListOrMapElemExpression listOrMapElemExpression, Object arg)
 			throws Exception {
 		MethodVisitor mv = ((InheritedAttributes) arg).mv;
-		// mv.visitFieldInsn(GETSTATIC, className, listOrMapElemExpression.identToken.getText(),"Ljava/util/ArrayList;");
-//		mv.visitVarInsn(ALOAD, 0);
+		mv.visitVarInsn(ALOAD, 0);
+		mv.visitFieldInsn(GETFIELD, className, listOrMapElemExpression.identToken.getText(),"Ljava/util/ArrayList;");
 		listOrMapElemExpression.expression.visit(this, arg); 
-        //mv.visitLdcInsn(new Integer(0)); 
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "get","(I)Ljava/lang/Object;");       
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "get", "(I)Ljava/lang/Object;", false);
         mv.visitTypeInsn(CHECKCAST, "java/lang/Integer"); 
         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer","intValue","()I"); 
         listOrMapElemExpression.setType(intType);
         return intType;
-		
 	}
 
 	@Override
