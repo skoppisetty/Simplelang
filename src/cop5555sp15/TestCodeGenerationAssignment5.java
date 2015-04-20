@@ -460,7 +460,7 @@ public class TestCodeGenerationAssignment5 {
  */
 public void list1() throws Exception{
 	System.out.println("***********list1");
-	String input = "class B {\ndef l1 : @[int];  \n  l1 = @[];  print  size(l1);  \n}";
+	String input = "class B {\ndef l1 : @[int]; \n  l1 = @[];  print  size(l1); \n}";
 	System.out.println(input);
 	Program program = (Program) parseCorrectInput(input);
 	assertNotNull(program);
@@ -484,7 +484,7 @@ public void list1() throws Exception{
 @Test
 public void list2() throws Exception{
 	System.out.println("***********list2");
-	String input = "class B {\ndef l1 : @[int];  \n l1 = @[1,2,3];  print size(l1); \n}";
+	String input = "class B {\ndef l1 : @[int]; \n l1 = @[1,2,3];  print size(l1); \n}";
 	System.out.println(input);
 	Program program = (Program) parseCorrectInput(input);
 	assertNotNull(program);
