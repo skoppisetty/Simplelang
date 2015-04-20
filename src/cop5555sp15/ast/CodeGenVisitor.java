@@ -286,8 +286,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 				, "Ljava/util/ArrayList;");
 		mv.visitInsn(DUP);
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size", "()I", false);
-//		mv.visitInsn(ICONST_M1);
-//		mv.visitInsn(IADD);
 		expressionLValue.expression.visit(this, arg);
 		mv.visitJumpInsn(IF_ICMPGT, l2);
 		mv.visitLabel(l1);
@@ -297,38 +295,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		mv.visitInsn(POP);
 		mv.visitInsn(DUP);
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size", "()I", false);
-//		mv.visitInsn(ICONST_M1);
-//		mv.visitInsn(IADD);
 		expressionLValue.expression.visit(this, arg);
 		mv.visitJumpInsn(IF_ICMPLT, l1);
 		mv.visitLabel(l2);
 		expressionLValue.expression.visit(this, arg);
-		
-		
-////		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
-////				, "Ljava/util/ArrayList;");
-//		Label l9 = new Label();
-//		mv.visitJumpInsn(GOTO, l9);
-//		Label l10 = new Label();
-//		mv.visitLabel(l10);
-//		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
-//				, "Ljava/util/ArrayList;");
-//		mv.visitInsn(ACONST_NULL);
-//		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "add", "(Ljava/lang/Object;)Z", false);
-//		mv.visitInsn(POP);
-//		mv.visitLabel(l9);
-//		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
-//				, "Ljava/util/ArrayList;");
-//		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size", "()I", false);
-//		expressionLValue.expression.visit(this, arg);
-//		mv.visitJumpInsn(IF_ICMPEQ, l10);
-//		Label l11 = new Label();
-//		mv.visitLabel(l11);
-//		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
-//				, "Ljava/util/ArrayList;");
-//		mv.visitInsn(DUP);
-////		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "ensureCapacity","(I)V");
-//		expressionLValue.expression.visit(this, arg);
 		return intType;
 	}
 
@@ -451,34 +421,25 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 			throws Exception {
 		MethodVisitor mv = ((InheritedAttributes) arg).mv;
 		mv.visitVarInsn(ALOAD,0);
+		
 		if(assignmentStatement.lvalue.visit(this, arg) == null){
-			// System.out.println(assignmentStatement.lvalue.getType());
+			assignmentStatement.expression.visit(this,arg);
 			if(assignmentStatement.lvalue.getType().contains("List")){
-				
-				System.out.println("lvalue is "+ assignmentStatement.lvalue);
-//				mv.visitFieldInsn(GETFIELD, className, 
-//						, "Ljava/util/ArrayList;");
-//				mv.visitFieldInsn(PUTSTATIC, className, assignmentStatement.lvalue.firstToken.getText(), "Ljava/util/ArrayList;"); 
-				assignmentStatement.expression.visit(this,arg);
 				mv.visitFieldInsn(PUTFIELD, className, assignmentStatement.lvalue.firstToken.getText()
 						, "Ljava/util/ArrayList;");
 			}
 			else{
-				assignmentStatement.expression.visit(this,arg);
 				mv.visitFieldInsn(PUTFIELD, className, assignmentStatement.lvalue.firstToken.getText()
 						, assignmentStatement.lvalue.getType());
 			}
 		}
 		else{
-			
 			assignmentStatement.expression.visit(this,arg);
 			if(assignmentStatement.expression.getType() == intType){
 				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
 			}
 			else if(assignmentStatement.expression.getType() == booleanType){
-//				mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
 				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-//				mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
 			}
 			mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", false);
 			mv.visitInsn(POP);
@@ -491,24 +452,17 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 	public Object visitListExpression(ListExpression listExpression, Object arg)
 			throws Exception {
 		MethodVisitor mv = ((InheritedAttributes) arg).mv;
-		System.out.println("list of list ?" + listExpression.expressionType);
 			mv.visitTypeInsn(NEW, "java/util/ArrayList"); 
 			mv.visitInsn(DUP); 
 			mv.visitMethodInsn(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V");
 			for (Expression elem : listExpression.expressionList) {
 				mv.visitInsn(DUP); 
 				elem.visit(this, arg);
-				System.out.println("Adding ?" + elem.getType());
 				if(elem.getType() == intType){
 					mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
 				}
-				else if(elem.getType() == stringType){
-//					mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(java/lang/String)Ljava/lang/String;", false);
-				}
 				else if(elem.getType() == booleanType){
-//					mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
 					mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
-//					mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
 				}
 				
 				mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "add", "(Ljava/lang/Object;)Z", false);
@@ -541,12 +495,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		if(listOrMapElemExpression.expressionType.equals("I")){
 			mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
 			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer","intValue","()I"); 
-//			mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(Ljava/lang/Object;)Ljava/lang/Integer;", false);
 			listOrMapElemExpression.setType(intType);
 		    return intType;
 		}
 		else if(listOrMapElemExpression.expressionType.equals("Ljava/lang/String;")){
-//			mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(java/lang/String)Ljava/lang/String;", false);
 			mv.visitTypeInsn(CHECKCAST, "java/lang/String");
 			listOrMapElemExpression.setType(stringType);
 		    return stringType;
@@ -559,8 +511,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		}
 		else{
 			mv.visitTypeInsn(CHECKCAST, "java/util/ArrayList");
-//			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean","booleanValue","()Z"); 
-//			listOrMapElemExpression.setType(booleanType);
 		    return null;
 		}
 	}

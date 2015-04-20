@@ -60,7 +60,6 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	
 		assignmentStatement.expression.visit(this, arg);
 		VarDec dec = (VarDec) symbolTable.lookup(assignmentStatement.lvalue.firstToken.getText());
-		// System.out.println("lval" + assignmentStatement.lvalue.visit(this, arg));
 		if(assignmentStatement.lvalue.visit(this, arg) == null){
 			assignmentStatement.lvalue.setType(dec.type.getJVMType());
 		}
@@ -93,9 +92,6 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 			Object arg) throws Exception {
 		binaryExpression.expression0.visit(this, arg);
 		binaryExpression.expression1.visit(this, arg);
-//		System.out.println(binaryExpression.expression0.getType());
-//		System.out.println(binaryExpression.expression1.getType());
-		
 		if(binaryExpression.expression0.getType() == binaryExpression.expression1.getType()){
 			if(binaryExpression.expression0.getType() == intType){
 				if(Arrays.asList(WEAK_OPS).contains(binaryExpression.op.kind) ||
@@ -389,7 +385,6 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 			}
 			
 		}
-		//System.out.println("lvalue exp" + dec.type.getJVMType().substring(16, dec.type.getJVMType().length()-2));
 		listOrMapElemExpression.setType(dec.type.getJVMType().substring(16, dec.type.getJVMType().length()-2));
 		return listOrMapElemExpression.getType();
 	}
@@ -456,13 +451,6 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 	@Override
 	public Object visitSimpleType(SimpleType simpleType, Object arg)
 			throws Exception {
-//		simpleType.
-//		System.out.println(simpleType.type.getText());
-//		if(simpleType.type.getText() == "int"){
-//			
-//		}
-//		System.out.println();
-		
 		return simpleType.type.getText();		
 	}
 
