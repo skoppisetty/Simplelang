@@ -278,8 +278,58 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 	@Override
 	public Object visitExpressionLValue(ExpressionLValue expressionLValue,
 			Object arg) throws Exception {
-		throw new UnsupportedOperationException(
-				"code generation not yet implemented");
+		MethodVisitor mv = ((InheritedAttributes) arg).mv;
+		
+		Label l1 = new Label();
+		Label l2 = new Label();
+		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
+				, "Ljava/util/ArrayList;");
+		mv.visitInsn(DUP);
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size", "()I", false);
+//		mv.visitInsn(ICONST_M1);
+//		mv.visitInsn(IADD);
+		expressionLValue.expression.visit(this, arg);
+		mv.visitJumpInsn(IF_ICMPGT, l2);
+		mv.visitLabel(l1);
+		mv.visitInsn(DUP);
+		mv.visitInsn(ACONST_NULL);
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "add", "(Ljava/lang/Object;)Z", false);
+		mv.visitInsn(POP);
+		mv.visitInsn(DUP);
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size", "()I", false);
+//		mv.visitInsn(ICONST_M1);
+//		mv.visitInsn(IADD);
+		expressionLValue.expression.visit(this, arg);
+		mv.visitJumpInsn(IF_ICMPLT, l1);
+		mv.visitLabel(l2);
+		expressionLValue.expression.visit(this, arg);
+		
+		
+////		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
+////				, "Ljava/util/ArrayList;");
+//		Label l9 = new Label();
+//		mv.visitJumpInsn(GOTO, l9);
+//		Label l10 = new Label();
+//		mv.visitLabel(l10);
+//		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
+//				, "Ljava/util/ArrayList;");
+//		mv.visitInsn(ACONST_NULL);
+//		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "add", "(Ljava/lang/Object;)Z", false);
+//		mv.visitInsn(POP);
+//		mv.visitLabel(l9);
+//		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
+//				, "Ljava/util/ArrayList;");
+//		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "size", "()I", false);
+//		expressionLValue.expression.visit(this, arg);
+//		mv.visitJumpInsn(IF_ICMPEQ, l10);
+//		Label l11 = new Label();
+//		mv.visitLabel(l11);
+//		mv.visitFieldInsn(GETFIELD, className, expressionLValue.identToken.getText()
+//				, "Ljava/util/ArrayList;");
+//		mv.visitInsn(DUP);
+////		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "ensureCapacity","(I)V");
+//		expressionLValue.expression.visit(this, arg);
+		return intType;
 	}
 
 	@Override
@@ -295,7 +345,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 	@Override
 	public Object visitIdentLValue(IdentLValue identLValue, Object arg)
 			throws Exception {
-		return identLValue.identToken.getText();
+		return null;
 	}
 
 	@Override
@@ -401,21 +451,34 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 			throws Exception {
 		MethodVisitor mv = ((InheritedAttributes) arg).mv;
 		mv.visitVarInsn(ALOAD,0);
-		// System.out.println(assignmentStatement.lvalue.getType());
-		if(assignmentStatement.lvalue.getType().contains("List")){
-//			mv.visitFieldInsn(GETFIELD, className, 
-//					, "Ljava/util/ArrayList;");
-//			mv.visitFieldInsn(PUTSTATIC, className, assignmentStatement.lvalue.firstToken.getText(), "Ljava/util/ArrayList;"); 
-			assignmentStatement.expression.visit(this,arg);
-			mv.visitFieldInsn(PUTFIELD, className, assignmentStatement.lvalue.firstToken.getText()
-					, "Ljava/util/ArrayList;");
+		if(assignmentStatement.lvalue.visit(this, arg) == null){
+			// System.out.println(assignmentStatement.lvalue.getType());
+			if(assignmentStatement.lvalue.getType().contains("List")){
+				
+				System.out.println("lvalue is "+ assignmentStatement.lvalue);
+//				mv.visitFieldInsn(GETFIELD, className, 
+//						, "Ljava/util/ArrayList;");
+//				mv.visitFieldInsn(PUTSTATIC, className, assignmentStatement.lvalue.firstToken.getText(), "Ljava/util/ArrayList;"); 
+				assignmentStatement.expression.visit(this,arg);
+				mv.visitFieldInsn(PUTFIELD, className, assignmentStatement.lvalue.firstToken.getText()
+						, "Ljava/util/ArrayList;");
+			}
+			else{
+				assignmentStatement.expression.visit(this,arg);
+				mv.visitFieldInsn(PUTFIELD, className, assignmentStatement.lvalue.firstToken.getText()
+						, assignmentStatement.lvalue.getType());
+			}
 		}
 		else{
 			
 			assignmentStatement.expression.visit(this,arg);
-			mv.visitFieldInsn(PUTFIELD, className, assignmentStatement.lvalue.firstToken.getText()
-					, assignmentStatement.lvalue.getType());
+			if(assignmentStatement.expression.getType() == intType){
+				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+			}
+			mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", false);
+			mv.visitInsn(POP);
 		}
+		
 		return null;
 	}
 	
@@ -430,7 +493,13 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		for (Expression elem : listExpression.expressionList) {
 			mv.visitInsn(DUP); 
 			elem.visit(this, arg);
-			mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+			if(elem.getType() == intType){
+				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+			}
+			else if(elem.getType() == stringType){
+//				mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(java/lang/String)Ljava/lang/String;", false);
+			}
+			
 			mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "add", "(Ljava/lang/Object;)Z", false);
 			mv.visitInsn(POP);
 		}
@@ -456,10 +525,24 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		mv.visitFieldInsn(GETFIELD, className, listOrMapElemExpression.identToken.getText(),"Ljava/util/ArrayList;");
 		listOrMapElemExpression.expression.visit(this, arg); 
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "get", "(I)Ljava/lang/Object;", false);
-        mv.visitTypeInsn(CHECKCAST, "java/lang/Integer"); 
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer","intValue","()I"); 
-        listOrMapElemExpression.setType(intType);
-        return intType;
+		if(listOrMapElemExpression.expressionType.equals("I")){
+			mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
+			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer","intValue","()I"); 
+//			mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(Ljava/lang/Object;)Ljava/lang/Integer;", false);
+			listOrMapElemExpression.setType(intType);
+		    return intType;
+		}
+		else if(listOrMapElemExpression.expressionType.equals("Ljava/lang/String;")){
+//			mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(java/lang/String)Ljava/lang/String;", false);
+			mv.visitTypeInsn(CHECKCAST, "java/lang/String");
+			listOrMapElemExpression.setType(stringType);
+		    return stringType;
+		}
+//		mv.visitTypeInsn(CHECKCAST, "java/lang/Integer"); 
+//        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer","intValue","()I"); 
+		System.out.println("this is the type " + listOrMapElemExpression.expressionType);
+//		mv.visitTypeInsn(CHECKCAST, "java/lang/String");
+		return null;
 	}
 
 	@Override
