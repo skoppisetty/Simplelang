@@ -64,8 +64,8 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 			assignmentStatement.lvalue.setType(dec.type.getJVMType());
 		}
 		if( dec != null){
-			System.out.println(assignmentStatement.lvalue.getType());
-			System.out.println(assignmentStatement.expression.getType());
+			// System.out.println(assignmentStatement.lvalue.getType());
+			// System.out.println(assignmentStatement.expression.getType());
 			if( assignmentStatement.lvalue.getType() == assignmentStatement.expression.getType()){
 				return assignmentStatement.lvalue.getType();
 			}
@@ -234,7 +234,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 				throw new TypeCheckException("Supporting only int indexes ",expressionLValue );
 			}
 		}
-		System.out.println("lvalue exp" + dec.type.getJVMType().substring(16, dec.type.getJVMType().length()-2));
+		// System.out.println("lvalue exp" + dec.type.getJVMType().substring(16, dec.type.getJVMType().length()-2));
 		expressionLValue.setType(dec.type.getJVMType().substring(16, dec.type.getJVMType().length()-2));
 		return expressionLValue.getType();
 	}
@@ -272,7 +272,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 			throw new TypeCheckException("Not declared variable",identLValue);
 		}
 //		identLValue.setType(identLValue.type);
-		System.out.println(identLValue.type);
+		// System.out.println(identLValue.type);
 		return identLValue.type;
 	}
 
@@ -357,12 +357,12 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 		}
 		if(t.equals("empty")){
 			listExpression.setType("Ljava/util/List<>;");
-			System.out.println(listExpression.getType());
+			// System.out.println(listExpression.getType());
 			return listExpression.getType();
 		}
 		else{
 			listExpression.setType("Ljava/util/List<"+ t + ">;");
-			System.out.println(listExpression.getType());
+			// System.out.println(listExpression.getType());
 			return listExpression.getType();
 		}
 		
@@ -374,7 +374,7 @@ public class TypeCheckVisitor implements ASTVisitor, TypeConstants {
 			ListOrMapElemExpression listOrMapElemExpression, Object arg)
 			throws Exception {
 		listOrMapElemExpression.expression.visit(this, arg);
-		System.out.println(listOrMapElemExpression.expression.getType());
+		// System.out.println(listOrMapElemExpression.expression.getType());
 		VarDec dec = (VarDec) symbolTable.lookup(listOrMapElemExpression.firstToken.getText());
 		if(dec == null){
 			throw new TypeCheckException("not declared ",listOrMapElemExpression );

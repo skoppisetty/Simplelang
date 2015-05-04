@@ -385,7 +385,7 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		@Override
 	public Object visitVarDec(VarDec varDec, Object arg) throws Exception {
 		MethodVisitor mv = ((InheritedAttributes) arg).mv;
-		System.out.println(varDec.type.getJVMType());
+		// System.out.println(varDec.type.getJVMType());
 
 		if(varDec.type.getJVMType().contains("List")){
 			fv = cw.visitField(0, varDec.identToken.getText()
@@ -491,7 +491,6 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes, TypeConstants {
 		mv.visitFieldInsn(GETFIELD, className, listOrMapElemExpression.identToken.getText(),"Ljava/util/ArrayList;");
 		listOrMapElemExpression.expression.visit(this, arg); 
 		mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/ArrayList", "get", "(I)Ljava/lang/Object;", false);
-		System.out.println("checking " + listOrMapElemExpression.expressionType);
 		if(listOrMapElemExpression.expressionType.equals("I")){
 			mv.visitTypeInsn(CHECKCAST, "java/lang/Integer");
 			mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Integer","intValue","()I"); 
